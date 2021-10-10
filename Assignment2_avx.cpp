@@ -13,13 +13,12 @@
 
 double* M = nullptr;
 int N = 0;
+# define VectorLength 4 //int VectorLength = 256/(8*sizeof(double));
 
-#define VectorLength 4
 // implementation of the matrix-vector multiply function
 void MatrixVectorMultiply(double* Y, const double* X)
 {  
-   const int n = (N/VectorLength);
-   
+   const int n = (N/VectorLength);  
    for (int i = 0; i < N; i++)
    {
       Y[i] = 0;
@@ -32,16 +31,7 @@ void MatrixVectorMultiply(double* Y, const double* X)
       }
    }
 }
-// {
-//    for (int i = 0; i < N; ++i)
-//    {
-//       Y[i] = 0;
-//       for (int j = 0; j < N; ++j)
-//       {
-//          Y[i] += M[i*N+j] * X[j];
-//       }
-//    }
-// }
+
 
 int main(int argc, char** argv)
 {

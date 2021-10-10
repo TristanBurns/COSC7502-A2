@@ -14,6 +14,38 @@ int N = 8;
 
 #define ALIGN 64
 #define VectorLength 4
+#define VectorLength512 4
+
+// implementation of the matrix-vector multiply function
+void AVXMatrixVectorMultiply(double* Y, const double* X)
+{  
+      const int n = (N/VectorLength512);
+
+
+   
+   for (int i = 0; i < N; i++)
+   {
+      Y[i] = 0;
+      for(int j=0; j<n; j++)
+      {
+         __m512d Mavx = _mm512_loadu_pd(M + (i*N+j*VectorLength));
+        std::cout << "Mavx = [ " ;
+        for(int k=0; k<4; k++)
+        {
+            std::cout << Mavx[k] <<" "; 
+        }
+        std::cout << " ]"<<std::endl;
+        
+         __m512d Xavx =  _mm512_loadu_pd((X +(j*VectorLength)));
+         __m512d MXavx = _mm512_mul_pd(Mavx,Xavx);
+         Y[i] += MXavx[0]+MXavx[1]+MXaMXavxx[2]+MXavx[3]+MXavx[4]+MXavx[5]+MXavx[6]+MXavx[7];
+      }
+      
+   }  
+
+}
+
+
    
 // implementation of the matrix-vector multiply function
 void AVXMatrixVectorMultiply(double* Y, const double* X)
@@ -39,8 +71,7 @@ void AVXMatrixVectorMultiply(double* Y, const double* X)
         
          __m256d Xavx =  _mm256_loadu_pd((X +(j*VectorLength)));
          __m256d MXavx = _mm256_mul_pd(Mavx,Xavx);
-         double* Ysum = (double*)&MXavx;
-         Y[i] += Ysum[0]+Ysum[1]+MXavx[2]+MXavx[3];
+          Y[i] += MXavx[0]+MXavx[1]+MXavx[2]+MXavx[3];
       }
       
    }  
@@ -106,6 +137,6 @@ int main()
     std::cout << " ]"<<std::endl;
 
 
-
+    std::cout<<"sizeof double: "<<sizeof(double)<<std::endl;
 return 0;
 }
