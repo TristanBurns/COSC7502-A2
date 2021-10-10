@@ -6,7 +6,7 @@ NVCC?=nvcc
 NVFLAGS?=-O2 --gpu-architecture=sm_35 -Wno-deprecated-gpu-targets
 
 # all targets
-TARGETS = Assignment2_serial Assignment2_openmp Assignment2_mpi Assignment2_cuda Assignment2_avx
+TARGETS = Assignment2_serial Assignment2_openmp Assignment2_mpi Assignment2_cuda Assignment2_avx AVXFunctionTest
 
 # The first rule in the Makefile is the default target that is made if 'make' is invoked with
 # no parameters.  'all' is a dummy target that will make everything
@@ -22,9 +22,11 @@ LIBS_Assignment2_avx    = -larpack
 LIBS_Assignment2_openmp = -larpack
 LIBS_Assignment2_mpi    = -larpack
 LIBS_Assignment2_cuda   = -larpack
+LIBS_AVXFunctionTest    = -larpack
 
 CXXFLAGS_Assignment2_openmp = -fopenmp
 CXXFLAGS_Assignment2_avx = -mavx
+CXXFLAGS_AVXFunctionTest = -mavx
 
 randutil.o : randutil.h randutil.ipp
 eigensolver.o : eigensolver.h
