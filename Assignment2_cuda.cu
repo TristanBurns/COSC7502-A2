@@ -12,12 +12,10 @@
 
 double* M = nullptr;
 int N = 0;
-float* xDevice;
-float* yDevice;
-float* mDevice;
-float* xFloat = nullptr;
-float* mFloat = nullptr;
-float* yFloat = nullptr;
+double* xDevice;
+double* yDevice;
+double* mDevice;
+
 int Threads;
 int Blocks;
 
@@ -31,8 +29,10 @@ void checkError(cudaError_t e)
    }
 }
 
+
+
 __global__
-void kernel(float *X, float *M, float *Y, const int N)
+void kernel(double *X, double *M, double *Y, const int N)
 {
     int tid=threadIdx.x+blockIdx.x*blockDim.x; //thread id
     float sum=0;
@@ -49,45 +49,11 @@ void kernel(float *X, float *M, float *Y, const int N)
 // implementation of the matrix-vector multiply function
 void MatrixVectorMultiply(double* Y, const double* X)
 {  
-
-   
-    for (int i = 0 ; i < N; i++)
-    {
-        xFloat[i] = (float) X[i];
-    }
-    
-    for (int i = 0 ; i < N; i++)
-    {
-        for (int j = 0 ; j < N; j++)
-        {
-            mFloat[i*N+j]  = (float) M[i*N+j];
-        }
-    }
-
-
-   checkError(cudaMalloc(&xDevice, N*sizeof(float)));
-   checkError(cudaMalloc(&yDevice, N*sizeof(float)));
-   checkError(cudaMalloc(&mDevice, N*N*sizeof(float)));
-
-   checkError(cudaMemcpy(xDevice, xFloat, sizeof(float)*N, cudaMemcpyHostToDevice));
-   checkError(cudaMemcpy(mDevice, mFloat, sizeof(float)*N*N, cudaMemcpyHostToDevice));
-
-   Threads = 1024;
+   checkError(cudaMemcpy(xDevice, X, sizeof(double)*N, cudaMemcpyHostToDevice));
+   Threads = 256;
    Blocks = (N+Threads-1)/Threads;
    kernel<<<Blocks, Threads>>>(xDevice, mDevice, yDevice, N);
-   checkError(cudaDeviceSynchronize());
-   checkError(cudaMemcpy(yFloat, yDevice, N*sizeof(float), cudaMemcpyDeviceToHost));
-   
-
-    for (int i = 0 ; i < N; i++)
-    {
-        Y[i]  = (double) yFloat[i];
-    }
-
-   checkError(cudaFree(xDevice));
-   checkError(cudaFree(yDevice));
-   checkError(cudaFree(mDevice));
-
+   checkError(cudaMemcpy(Y, yDevice, N*sizeof(double), cudaMemcpyDeviceToHost)); 
 }
 
 
@@ -104,11 +70,13 @@ int main(int argc, char** argv)
    }
    N = std::stoi(argv[1]);
 
-   // Allocate memory for the matrix
+   // Allocate memory for the host
    M = static_cast<double*>(malloc(N*N*sizeof(double)));
-   mFloat = static_cast<float*>(malloc(N*N*sizeof(float)));
-   xFloat = static_cast<float*>(malloc(N*sizeof(float)));
-   yFloat = static_cast<float*>(malloc(N*sizeof(float)));
+
+   // Allocate memory for the device
+   checkError(cudaMalloc(&xDevice, N*sizeof(double)));
+   checkError(cudaMalloc(&yDevice, N*sizeof(double)));
+   checkError(cudaMalloc(&mDevice, N*N*sizeof(double)));
    // seed the random number generator to a known state
    randutil::seed(4);  // The standard random number.  https://xkcd.com/221/
 
@@ -124,6 +92,8 @@ int main(int argc, char** argv)
          M[i*N + j] = M[j*N + i] = randutil::randn();
       }
    }
+   //Copy M to cuda device ONCE!
+   checkError(cudaMemcpy(mDevice, M, sizeof(double)*N*N, cudaMemcpyHostToDevice));
    auto FinishInitialization = std::chrono::high_resolution_clock::now();
 
    // Call the eigensolver
@@ -147,5 +117,8 @@ int main(int argc, char** argv)
 
    // free memory
    free(M);
+   checkError(cudaFree(xDevice));
+   checkError(cudaFree(yDevice));
+   checkError(cudaFree(mDevice));
 
 }
